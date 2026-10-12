@@ -37,10 +37,16 @@ class OllamaLLM:
         if self.model not in names and f"{self.model}:latest" not in names:
             raise OllamaError(f"Model '{self.model}' ontbreekt. Haal het op met: ollama pull {self.model}")
 
-    def warmup(self) -> None:
-        """Laadt het model alvast in het geheugen (lege messages = enkel laden)."""
-        r = self._http.post(f"{self.host}/api/chat",
-                            json={"model": self.model, "messages": [], "keep_alive": self.keep_alive})
+    def warmup(self, messages: list[dict], tools: list[dict]) -> None:
+        """Laadt het model met DEZELFDE opties als echte vragen (anders herlaadt Ollama het bij de eerste
+        vraag) en verwerkt de vaste systeemtekst + tools alvast, zodat Ollama die kan hergebruiken."""
+        payload = {"model": self.model, "messages": messages, "stream": False, "keep_alive": self.keep_alive,
+                   "options": {**self.options, "num_predict": 1}}
+        if tools:
+            payload["tools"] = tools
+        if self.think is not None:
+            payload["think"] = self.think
+        r = self._http.post(f"{self.host}/api/chat", json=payload)
         r.raise_for_status()
 
     def stream(self, messages: list[dict], tools: list[dict], run_tool: Callable[[str, dict], str],

@@ -42,18 +42,40 @@ def test_open_question_goes_to_llm(fake_ollama, make_config):
     assert reply.route == "llm"
     assert "**" not in reply.text and "testantwoord" in reply.text
     req = fake_ollama.chat_requests()[-1]
-    assert req["model"] == "qwen3.5:9b" and req["think"] is False and req["stream"] is True
+    assert req["model"] == "qwen3:8b" and req["think"] is False and req["stream"] is True
     assert {t["function"]["name"] for t in req["tools"]} >= {"remember", "recall", "set_timer", "get_time"}
-    assert "Answer in Dutch" in req["messages"][0]["content"]
+    assert req["messages"][-1]["content"].endswith("(Reply in Dutch as spoken in Flanders: natural Belgian Dutch, informal 'je'.)")
     states = [e["state"] for e in events if e["type"] == "status"]
     assert states[0] == "thinking"
     assert "llm_first_token" in t.steps()
 
 
-def test_english_question_gets_english_prompt(fake_ollama, make_config):
+def test_english_question_gets_english_hint(fake_ollama, make_config):
     a, _, _ = make_assistant(make_config(fake_ollama.url))
     ask(a, "Tell me a joke", "en")
-    assert "Answer in English." in fake_ollama.chat_requests()[-1]["messages"][0]["content"]
+    assert fake_ollama.chat_requests()[-1]["messages"][-1]["content"] == "Tell me a joke\n\n(Reply in English.)"
+
+
+def test_system_prompt_is_stable_for_prompt_caching(fake_ollama, make_config):
+    """Zelfde systeemtekst over vragen en talen heen: Ollama kan ze dan hergebruiken (snellere antwoorden)."""
+    a, _, _ = make_assistant(make_config(fake_ollama.url))
+    ask(a, "Tell me a joke", "en")
+    ask(a, "Vertel een mop", "nl")
+    first, second = fake_ollama.chat_requests()[-2:]
+    assert first["messages"][0] == second["messages"][0]
+    assert first["tools"] == second["tools"] and first["options"] == second["options"]
+
+
+def test_warmup_uses_same_options_as_questions(fake_ollama, make_config):
+    """Andere opties (bv. num_ctx) bij het opwarmen = Ollama herlaadt het model bij de eerste vraag."""
+    a, _, _ = make_assistant(make_config(fake_ollama.url))
+    a.warmup()
+    warm = fake_ollama.requests[-1]
+    ask(a, "Wat is de zin van het leven?", "nl")
+    real = fake_ollama.chat_requests()[-1]
+    assert warm["model"] == real["model"] and warm["keep_alive"] == real["keep_alive"]
+    assert {k: v for k, v in warm["options"].items() if k != "num_predict"} == real["options"]
+    assert warm["tools"] == real["tools"] and warm["messages"][0] == real["messages"][0]
 
 
 def test_remember_survives_restart(fake_ollama, make_config):

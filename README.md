@@ -14,15 +14,16 @@ Verstaat Nederlands en Engels en antwoordt in de taal waarin je spreekt.
 
 | Onderdeel | Keuze | Geschat RAM |
 |---|---|---|
-| Taalmodel | Ollama + `qwen3.5:9b` (Q4_K_M, tools), thinking uit, context 8k | ~6,6 GB + ~1 GB context |
+| Taalmodel | Ollama + `qwen3:8b` (Q4_K_M, tools), thinking uit, context 8k | ~5,2 GB + context |
 | Spraak → tekst | `mlx-whisper` + `whisper-large-v3-turbo` (meertalig) | ~1,6 GB |
 | Tekst → spraak | Piper: `nl_BE-nathalie-medium` (Vlaams), `en_GB-alan-medium` | ~0,2 GB |
 | Wake word | openWakeWord, voorgetraind `hey_jarvis` | <0,1 GB |
 | Spraakdetectie | Silero VAD (ONNX) | <0,05 GB |
 | Geheugen | SQLite (`data/jarvis.db`) | - |
 
-Totaal ongeveer **10 GB**, dus krap maar werkbaar op 16 GB naast macOS. Lichter: zet `llm.model: qwen3:8b`
-(~5,2 GB) en/of `stt.model: mlx-community/whisper-small-mlx`. Echt gemeten waarden toont JARVIS zelf wanneer je hem afsluit.
+Gemeten op de MacBook Air M1 met het eerder gekozen `qwen3.5:9b`: JARVIS 2,8 GB + Ollama 10,5 GB = 13,3 GB,
+met nog maar 3,7 GB vrij en ~12 s tot het eerste woord. Te krap, daarom is `qwen3:8b` nu de standaard.
+Echt gemeten waarden toont JARVIS zelf wanneer je hem afsluit (inclusief welk deel van het model op de GPU draait).
 
 ## Installatie (MacBook Air M1 / Mac mini M1)
 
@@ -38,10 +39,9 @@ Systeembrede stappen (1 en 2) vragen jouw akkoord; de rest blijft in deze projec
    ```bash
    ./scripts/setup.sh
    ```
-4. **Taalmodel** (eenmalig, ~6,6 GB). Lichter alternatief: `ollama pull qwen3:8b` (~5,2 GB), en pas dan
-   `llm.model` aan in config.yaml.
+4. **Taalmodel** (eenmalig, ~5,2 GB). Een ander model kies je met `llm.model` in config.yaml.
    ```bash
-   ollama pull qwen3.5:9b
+   ollama pull qwen3:8b
    ```
 
 > Kopieer enkel de regels in de grijze blokken. De standaardshell op de Mac (zsh) ziet `#` niet als
@@ -172,7 +172,7 @@ je in `config.yaml`.
 - **"Taalmodel niet beschikbaar"**: draait Ollama (`ollama list`)? Is het model gedownload?
 - **Hij hoort niets**: kijk of macOS microfoontoegang gaf, en controleer `audio.input_device`.
 - **Hij hoort "Hey Jarvis" niet goed met je accent**: zet `wakeword.patience_frames: 2` of `threshold: 0.4`.
-- **Te traag of te warm**: kies `qwen3:8b` en/of `whisper-small`. Met `keep_alive: -1` blijft het model
+- **Te traag of te warm**: kies een kleiner Whisper-model (zie "Whisper-grootte kiezen"). Met `keep_alive: -1` blijft het model
   geladen, zodat er nooit een koude start is.
 - **Logs**: `data/logs/jarvis.log`, latency per vraag in `data/logs/latency.jsonl`, sessie-overzichten in `data/logs/sessie-*.md`.
 

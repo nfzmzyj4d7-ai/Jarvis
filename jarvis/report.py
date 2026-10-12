@@ -53,7 +53,9 @@ def memory_table(cfg) -> str:
     try:
         ps = httpx.get(cfg.get("llm.host").rstrip("/") + "/api/ps", timeout=3).json()
         for m in ps.get("models", []):
-            lines.append(f"| ↳ waarvan geladen model {m['name']} (volgens Ollama) | {m.get('size', 0) / 1e6:,.0f} MB |")
+            size, vram = m.get("size", 0), m.get("size_vram", 0)
+            gpu = f", {vram / size:.0%} op de GPU" if size else ""
+            lines.append(f"| ↳ waarvan geladen model {m['name']} (volgens Ollama{gpu}) | {size / 1e6:,.0f} MB |")
     except Exception:
         lines.append("| Ollama | (niet bereikbaar) |")
     vm = psutil.virtual_memory()

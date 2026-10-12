@@ -116,7 +116,7 @@ def _main(argv: list[str] | None) -> int:
     try:
         t0 = time.perf_counter()
         llm.check()
-        llm.warmup()
+        assistant.warmup()
         log.info("Taalmodel %s geladen in %.1fs", llm.model, time.perf_counter() - t0)
     except Exception as e:  # bv. Ollama niet gestart of model nog niet gedownload
         log.warning("Taalmodel niet beschikbaar (de router werkt wel): %s", e)

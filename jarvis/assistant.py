@@ -12,7 +12,7 @@ from zoneinfo import ZoneInfo
 import httpx
 
 from .llm import OllamaError
-from .persona import system_prompt
+from .persona import system_prompt, user_message
 from .router import IntentRouter
 from .textfmt import SentenceSplitter, clean_for_speech, spoken_duration
 from .tools import ToolContext
@@ -83,12 +83,22 @@ class Assistant:
                       intent=intent.name if intent else None)
         return Reply(reply_text, lang, timings.route, intent.name if intent else None)
 
-    def _ask_llm(self, text: str, lang: str, timings, cancel) -> str:
+    def _system(self) -> dict:
         facts = self.memory.facts(self.cfg.get("memory.facts_in_prompt", 50))
-        messages = [{"role": "system", "content": system_prompt(self.user, lang, self.now(), facts)}]
-        messages += self.memory.recent_messages(self.cfg.get("llm.history_turns", 6),
-                                                self.cfg.get("llm.history_window_minutes", 30))
-        messages.append({"role": "user", "content": text})
+        return {"role": "system", "content": system_prompt(self.user, self.now().date(), facts)}
+
+    def _messages(self, text: str, lang: str) -> list[dict]:
+        history = self.memory.recent_messages(self.cfg.get("llm.history_turns", 6),
+                                              self.cfg.get("llm.history_window_minutes", 30))
+        return [self._system(), *history, {"role": "user", "content": user_message(text, lang)}]
+
+    def warmup(self) -> None:
+        """Laadt het model met exact dezelfde instellingen als echte vragen, en laat Ollama de system prompt
+        + tools alvast verwerken. Zo betaalt je eerste vraag geen herlaad- of opstartkost."""
+        self.llm.warmup([self._system(), {"role": "user", "content": "Hallo"}], self._schemas)
+
+    def _ask_llm(self, text: str, lang: str, timings, cancel) -> str:
+        messages = self._messages(text, lang)
 
         splitter, parts = SentenceSplitter(), []
         try:

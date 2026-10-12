@@ -19,7 +19,7 @@ paths:
 
 llm:
   host: http://127.0.0.1:11434
-  model: qwen3.5:9b           # lichter alternatief: qwen3:8b
+  model: qwen3:8b             # qwen3.5:9b gemeten op M1 16 GB: 10,4 GB in Ollama -> te krap naast Whisper
   think: false                # 'thinking' uit = veel snellere antwoorden
   keep_alive: 30m             # hoe lang Ollama het model in RAM houdt (-1 = altijd)
   temperature: 0.7

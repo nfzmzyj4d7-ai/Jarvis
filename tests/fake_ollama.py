@@ -25,7 +25,7 @@ def _reply(messages: list[dict]) -> tuple[str, list]:
 
 
 class FakeOllama:
-    def __init__(self, model: str = "qwen3.5:9b", port: int = 0):
+    def __init__(self, model: str = "qwen3:8b", port: int = 0):
         self.model = model
         self.requests: list[dict] = []
         outer = self
