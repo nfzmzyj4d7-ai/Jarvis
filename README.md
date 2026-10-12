@@ -38,20 +38,25 @@ Systeembrede stappen (1 en 2) vragen jouw akkoord; de rest blijft in deze projec
    ```bash
    ./scripts/setup.sh
    ```
-4. **Taalmodel** (eenmalig, ~6,6 GB):
+4. **Taalmodel** (eenmalig, ~6,6 GB). Lichter alternatief: `ollama pull qwen3:8b` (~5,2 GB), en pas dan
+   `llm.model` aan in config.yaml.
    ```bash
-   ollama pull qwen3.5:9b        # of: ollama pull qwen3:8b  (~5,2 GB, en pas config.yaml aan)
+   ollama pull qwen3.5:9b
    ```
+
+> Kopieer enkel de regels in de grijze blokken. De standaardshell op de Mac (zsh) ziet `#` niet als
+> commentaar, daarom staat er geen uitleg in de blokken zelf.
 
 ## Starten
 
-```bash
-source .venv/bin/activate
-python -m jarvis                  # spraakmodus: zeg "Hey Jarvis"
-python -m jarvis --text           # tekstmodus: typen, geen microfoon nodig
-python -m jarvis --text --speak   # tekstmodus, maar met gesproken antwoorden
-python -m jarvis --list-devices   # audio-apparaten (voor audio.input_device / output_device)
-```
+Eerst `source .venv/bin/activate`, daarna één van:
+
+| Commando | Wat |
+|---|---|
+| `python -m jarvis` | spraakmodus: zeg "Hey Jarvis" |
+| `python -m jarvis --text` | tekstmodus: typen, geen microfoon nodig |
+| `python -m jarvis --text --speak` | tekstmodus, maar met gesproken antwoorden |
+| `python -m jarvis --list-devices` | audio-apparaten (voor `audio.input_device` / `output_device`) |
 
 - **Microfoontoegang:** bij de eerste start in spraakmodus vraagt macOS of Terminal (of iTerm/VS Code)
   de microfoon mag gebruiken. Klik **Sta toe**. Heb je per ongeluk geweigerd, zet het dan terug aan via
@@ -114,8 +119,9 @@ def roll_die(ctx, **_):
 
 ## Testen
 
+pytest zit al in `setup.sh`:
+
 ```bash
-pip install -r requirements-dev.txt     # zit al in setup.sh
 python -m pytest -q
 ```
 
@@ -139,9 +145,16 @@ openWakeWord- en Silero-modellen.
 
 ### Whisper-grootte kiezen op jouw stem
 
+Eenmalig 10 zinnen voorlezen (NL + EN):
+
 ```bash
-python scripts/bench_stt.py --record   # lees 10 zinnen voor (NL + EN), eenmalig
-python scripts/bench_stt.py            # tabel: snelheid, WER per taal, taalherkenning per model
+python scripts/bench_stt.py --record
+```
+
+Daarna de tabel met snelheid, WER per taal en taalherkenning per model:
+
+```bash
+python scripts/bench_stt.py
 ```
 
 Zet de winnaar in `stt.model`. Een MacBook Air heeft geen ventilator, dus meet een paar keer.
