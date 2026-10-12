@@ -36,11 +36,10 @@ SENTENCES = [
     ("en", "What is the capital of Australia?"),
     ("en", "Tell me what you know about my car."),
 ]
-MODELS = [
+MODELS = [                                   # large-v3 (niet-turbo) is op een M1 trager dan turbo: niet zinvol
     "mlx-community/whisper-small-mlx",
     "mlx-community/whisper-medium-mlx",
     "mlx-community/whisper-large-v3-turbo",
-    "mlx-community/whisper-large-v3-mlx",
 ]
 
 
