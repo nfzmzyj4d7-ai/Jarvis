@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JARVIS testpagina</title>
+</head>
+<body>
+<!-- Bewust kaal: enkel om de events te zien. De echte HUD komt later. -->
+<h1>JARVIS events</h1>
+<p>Verbinding: <b id="conn">verbinden...</b></p>
+<p>Status: <b id="state">?</b></p>
+<p>Laatste transcript: <span id="transcript">-</span></p>
+<p>Laatste antwoord: <span id="response">-</span></p>
+<p>Laatste latency: <span id="latency">-</span></p>
+<h2>Log</h2>
+<pre id="log"></pre>
+<script>
+const url = (location.protocol.startsWith("http") ? "ws://" + location.host : "ws://127.0.0.1:8765") + "/ws";
+const $ = (id) => document.getElementById(id);
+function connect() {
+  const ws = new WebSocket(url);
+  ws.onopen = () => { $("conn").textContent = "verbonden met " + url; };
+  ws.onclose = () => { $("conn").textContent = "verbroken, opnieuw proberen..."; setTimeout(connect, 1000); };
+  ws.onmessage = (msg) => {
+    const ev = JSON.parse(msg.data);
+    if (ev.type === "status") $("state").textContent = ev.state;
+    if (ev.type === "transcript") $("transcript").textContent = "[" + ev.lang + "] " + ev.text;
+    if (ev.type === "response") $("response").textContent = "[" + ev.route + "/" + ev.lang + "] " + ev.text;
+    if (ev.type === "latency") $("latency").textContent = JSON.stringify(ev);
+    const time = new Date((ev.ts || Date.now() / 1000) * 1000).toLocaleTimeString();
+    $("log").textContent = time + "  " + msg.data + "\n" + $("log").textContent;
+  };
+}
+connect();
+</script>
+</body>
+</html>

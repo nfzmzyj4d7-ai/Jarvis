@@ -1,0 +1,78 @@
+# JARVIS - configuratie (fase 1)
+#
+# Alles wat aan dit toestel gebonden is, staat HIER. Relatieve paden worden
+# opgelost ten opzichte van de map waarin dit bestand staat, zodat je de hele
+# projectmap zo naar de Mac mini kan kopiëren.
+# Ander config-bestand gebruiken: JARVIS_CONFIG=/pad/naar/config.yaml of --config.
+
+user:
+  name: Jules
+  timezone: Europe/Brussels
+
+languages:
+  supported: [nl, en]
+  default: nl                 # gebruikt als de taal niet te bepalen is
+
+paths:
+  database: data/jarvis.db    # gesprekken + onthouden feiten (SQLite)
+  log_dir: data/logs          # jarvis.log + latency.jsonl
+
+llm:
+  host: http://127.0.0.1:11434
+  model: qwen3.5:9b           # lichter alternatief: qwen3:8b
+  think: false                # 'thinking' uit = veel snellere antwoorden
+  keep_alive: 30m             # hoe lang Ollama het model in RAM houdt (-1 = altijd)
+  temperature: 0.7
+  num_ctx: 8192               # contextvenster; groter = meer RAM
+  max_tool_rounds: 3
+  history_turns: 6            # aantal vorige vraag/antwoord-paren als context
+  history_window_minutes: 30  # oudere gesprekken worden niet meegestuurd
+  timeout_s: 120
+
+stt:
+  model: mlx-community/whisper-large-v3-turbo   # sneller/lichter: mlx-community/whisper-small-mlx
+  fallback_language: nl       # als Whisper iets anders dan nl/en denkt te horen
+
+tts:
+  voices:                     # Piper-stemmen (scripts/download_models.py haalt ze op)
+    nl: models/piper/nl_BE-nathalie-medium.onnx   # alternatief: nl_BE-rdh-medium
+    en: models/piper/en_GB-alan-medium.onnx
+  length_scale: 1.0           # < 1 = sneller praten
+  volume: 1.0
+
+wakeword:
+  model: models/openwakeword/hey_jarvis_v0.1.onnx
+  melspec_model: models/openwakeword/melspectrogram.onnx
+  embedding_model: models/openwakeword/embedding_model.onnx
+  threshold: 0.5              # hoger = minder valse activaties, maar minder gevoelig
+  patience_frames: 4          # zoveel frames (80 ms) na elkaar boven de drempel; 1 = gevoeligst
+  cooldown_s: 1.5
+
+vad:
+  model: models/openwakeword/silero_vad.onnx
+  threshold: 0.5              # spraakkans per 80 ms frame
+  silence_ms: 800             # zolang stil na je zin = "uitgesproken"
+  max_wait_s: 6               # zo lang wachten op het begin van je zin
+  max_utterance_s: 15
+  min_speech_ms: 240
+  ignore_after_wake_ms: 250   # negeer de bevestigingstoon zelf
+
+audio:
+  input_device: null          # null = systeemstandaard; zie: python -m jarvis --list-devices
+  output_device: null
+  earcon: true                # korte toon na "Hey Jarvis"
+  barge_in: true              # "Hey Jarvis" tijdens het praten onderbreekt hem
+
+memory:
+  facts_in_prompt: 50         # zoveel recente feiten krijgt het taalmodel altijd mee
+
+tools:
+  disabled: []                # bv. [set_timer] om een tool uit te schakelen
+
+server:
+  enabled: true
+  host: 127.0.0.1             # 0.0.0.0 = ook bereikbaar vanaf andere toestellen in je netwerk
+  port: 8765
+
+logging:
+  level: INFO
