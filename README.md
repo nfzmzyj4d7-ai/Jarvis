@@ -22,7 +22,7 @@ Verstaat Nederlands en Engels en antwoordt in de taal waarin je spreekt.
 | Geheugen | SQLite (`data/jarvis.db`) | - |
 
 Totaal ongeveer **10 GB**, dus krap maar werkbaar op 16 GB naast macOS. Lichter: zet `llm.model: qwen3:8b`
-(~5,2 GB) en/of `stt.model: mlx-community/whisper-small-mlx`. Echt gemeten waarden geeft `scripts/report.py`.
+(~5,2 GB) en/of `stt.model: mlx-community/whisper-small-mlx`. Echt gemeten waarden toont JARVIS zelf wanneer je hem afsluit.
 
 ## Installatie (MacBook Air M1 / Mac mini M1)
 
@@ -98,7 +98,9 @@ Een ander bestand gebruiken: `JARVIS_CONFIG=/pad/config.yaml python -m jarvis` o
 | `server` | host/poort van de WebSocket-server (`0.0.0.0` = bereikbaar vanuit je netwerk) |
 
 Reageert hij te snel op gelijkende woorden, verhoog dan `wakeword.threshold` of `patience_frames`.
-Mist hij jouw "Hey Jarvis", verlaag ze dan.
+Mist hij jouw "Hey Jarvis", verlaag ze dan. Gemeten met synthetische spraak (40 keer per zin): "Hey Jarvis"
+wordt altijd herkend (8 à 9 frames boven de drempel). Het bijna-rijm "Hey Travis" geeft bij `patience_frames: 4`
+ongeveer 1 op 10 keer een valse activatie, bij 6 ongeveer 1 op 40.
 
 ## Een tool toevoegen
 
@@ -141,7 +143,7 @@ openWakeWord- en Silero-modellen.
 | 5 | Geheugen | "Hey Jarvis… onthoud dat mijn auto een Suzuki Vitara is". Stop JARVIS (Ctrl-C), start opnieuw: "Hey Jarvis… welke auto heb ik?" |
 | 6 | Tekstmodus | `python -m jarvis --text` en typ dezelfde vragen. |
 | 7 | Testpagina | <http://127.0.0.1:8765/> toont de statussen live. |
-| 8 | Latency en geheugen | Laat JARVIS draaien en voer in een tweede venster uit: `python scripts/report.py` |
+| 8 | Latency en geheugen | Stop JARVIS met Ctrl-C (of typ `exit` in tekstmodus): hij toont de latencytabel van die sessie en het geheugengebruik, en bewaart ze in `data/logs/sessie-*.md`. |
 
 ### Whisper-grootte kiezen op jouw stem
 
@@ -172,7 +174,7 @@ je in `config.yaml`.
 - **Hij hoort "Hey Jarvis" niet goed met je accent**: zet `wakeword.patience_frames: 2` of `threshold: 0.4`.
 - **Te traag of te warm**: kies `qwen3:8b` en/of `whisper-small`. Met `keep_alive: -1` blijft het model
   geladen, zodat er nooit een koude start is.
-- **Logs**: `data/logs/jarvis.log`, latency per vraag in `data/logs/latency.jsonl`.
+- **Logs**: `data/logs/jarvis.log`, latency per vraag in `data/logs/latency.jsonl`, sessie-overzichten in `data/logs/sessie-*.md`.
 
 ## Projectstructuur
 
@@ -190,8 +192,8 @@ jarvis/
   stt.py tts.py        Whisper / Piper
   wakeword.py listen.py audio.py   wake word / VAD-opname / microfoon
   events.py ws_server.py           event-bus / WebSocket + testpagina
-  latency.py sysinfo.py            metingen
+  latency.py report.py sysinfo.py  metingen + overzicht bij afsluiten
 web/test.html          kale testpagina
-scripts/               setup, modellen downloaden, STT-benchmark, rapport
+scripts/               setup, modellen downloaden, STT-benchmark
 tests/                 pytest (+ nep-Ollama)
 ```

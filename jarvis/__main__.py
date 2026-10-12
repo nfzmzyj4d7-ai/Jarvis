@@ -89,6 +89,7 @@ def _main(argv: list[str] | None) -> int:
     cfg = load_config(args.config)
     setup_logging(cfg)
     t_start = time.perf_counter()
+    session_start = time.time()
     bus = EventBus()
 
     if cfg.get("server.enabled", True) and not args.no_server:
@@ -142,6 +143,8 @@ def _main(argv: list[str] | None) -> int:
     finally:
         timers.cancel_all()
         memory.close()
+    from .report import session_summary
+    print("\n" + session_summary(cfg, session_start), flush=True)
     return 0
 
 

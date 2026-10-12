@@ -9,6 +9,12 @@ Alles blijft lokaal, gratis en zonder accounts. Nieuwe functies komen als **tool
 - [x] Ollama met tool calling + plugin-systeem (tijd, datum, timer, onthoud, wat weet je)
 - [x] SQLite-geheugen, JARVIS-persona, tekstmodus, WebSocket-statusserver + testpagina, latency-logging
 
+## Volgende stap (voorstel): een natuurlijkere stem
+- Piper is snel en licht, maar klinkt vlak. Kandidaat: **Chatterbox Multilingual** (MIT-licentie, 23 talen
+  waaronder Nederlands) via **mlx-audio** op Apple Silicon.
+- Eerst meten op de M1: snelheid (eerste geluid moet kort blijven), extra geheugen (~2-3 GB bovenop ~10 GB),
+  en Vlaamse uitspraak. Piper blijft de snelle terugvaloptie (instelbaar in `tts`).
+
 ## Fase 2: HUD-webinterface
 - HUD (ontwerp in Claude Design) op de bestaande WebSocket-eventstream (`ws://…:8765/ws`)
 - Commando's ook vanuit de HUD sturen (berichten van client naar server)

@@ -21,6 +21,7 @@ def run_text_mode(config, lines):
     p = subprocess.run([sys.executable, "-m", "jarvis", "--text", "--config", str(config)],
                        input="\n".join(lines) + "\n", capture_output=True, text=True, timeout=60, env=env, cwd=ROOT)
     assert p.returncode == 0, p.stderr
+    run_text_mode.stdout = p.stdout
     return [l for l in p.stdout.splitlines() if l.startswith("jarvis [")], p.stderr
 
 
@@ -32,6 +33,10 @@ def test_text_mode_and_memory_across_restarts(fake_ollama, make_config):
     assert out[1].startswith("jarvis [router/en]> It's")
     assert out[2].startswith("jarvis [llm/nl]>")
     assert "Latency [text/router]" in err
+    summary = run_text_mode.stdout                                 # overzicht bij afsluiten
+    assert "**text / router** (2 interacties)" in summary and "**text / llm** (1 interacties)" in summary
+    assert "| router-beslissing |" in summary and "Totaal JARVIS + Ollama" in summary
+    assert list((config.parent / "logs").glob("sessie-*.md"))
 
     out, _ = run_text_mode(config, ["Welke auto heb ik?"])          # tweede proces = herstart
     assert out == ["jarvis [llm/nl]> Je rijdt met een Suzuki Vitara."]
